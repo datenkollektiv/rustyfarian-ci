@@ -1,0 +1,60 @@
+name: Host checks
+
+# Reusable host check: one job that runs exactly one `just ci-<check>` recipe.
+# Callers keep their own workflow `name:`, triggers, permissions and concurrency (see CONVENTIONS.md).
+
+on:
+  workflow_call:
+    inputs:
+      check:
+        description: "Which check to run: fmt, clippy, test, deny or audit (runs `just ci-<check>`)"
+        type: string
+        required: true
+      timeout-minutes:
+        description: Job timeout; callers cannot set timeout-minutes on a `uses:` job
+        type: number
+        required: false
+        default: 20
+      toolchain:
+        description: Rust toolchain; exported as RUSTUP_TOOLCHAIN so it overrides a repo's rust-toolchain.toml
+        type: string
+        required: false
+        default: stable
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: ${{ inputs.check }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    env:
+      CARGO_TERM_COLOR: always
+      CHECK: ${{ inputs.check }}
+      # A caller's `env:` does not reach a called workflow, so the toolchain override is set here.
+      RUSTUP_TOOLCHAIN: ${{ inputs.toolchain }}
+
+    steps:
+      - name: Validate check input
+        run: |
+          case "$CHECK" in
+            fmt|clippy|test|deny|audit) ;;
+            *) echo "::error::unknown check '$CHECK' (expected fmt, clippy, test, deny or audit)"; exit 1 ;;
+          esac
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Rust and just
+        uses: datenkollektiv/rustyfarian-ci/.github/actions/setup-rust-just@v1
+        with:
+          toolchain: ${{ inputs.toolchain }}
+          components: ${{ inputs.check == 'fmt' && 'rustfmt' || inputs.check == 'clippy' && 'clippy' || '' }}
+          tools: ${{ inputs.check == 'deny' && 'cargo-deny' || inputs.check == 'audit' && 'cargo-audit' || '' }}
+          # Every check runs as job id `check`, so the cache key must name the check; deny/audit compile nothing.
+          cache: ${{ inputs.check == 'clippy' || inputs.check == 'test' }}
+          cache-key: ${{ inputs.check }}
+
+      - name: Run just ci-${{ inputs.check }}
+        run: just "ci-$CHECK"

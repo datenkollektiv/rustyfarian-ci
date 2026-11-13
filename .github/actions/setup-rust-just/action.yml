@@ -1,0 +1,48 @@
+name: Setup Rust and just
+description: Install a Rust toolchain, restore the cargo cache, install just and optional cargo tools.
+
+inputs:
+  toolchain:
+    description: Rust toolchain to install (e.g. stable, nightly-2026-01-26)
+    required: false
+    default: stable
+  components:
+    description: Comma-separated rustup components (e.g. rustfmt, clippy)
+    required: false
+    default: ""
+  tools:
+    description: Comma-separated tools for taiki-e/install-action (e.g. cargo-deny, cargo-audit)
+    required: false
+    default: ""
+  cache:
+    description: Restore and save cargo artifacts with Swatinem/rust-cache
+    required: false
+    default: "true"
+  cache-key:
+    description: Extra cache key; required when several jobs share a job id, as all jobs of a reusable workflow do
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ inputs.toolchain }}
+        components: ${{ inputs.components }}
+
+    - name: Cache cargo artifacts
+      if: inputs.cache == 'true'
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: ${{ inputs.cache-key }}
+
+    - name: Setup just
+      uses: extractions/setup-just@v4
+
+    - name: Install cargo tools
+      if: inputs.tools != ''
+      uses: taiki-e/install-action@v2
+      with:
+        tool: ${{ inputs.tools }}
