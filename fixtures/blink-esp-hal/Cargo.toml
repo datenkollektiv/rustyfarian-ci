@@ -1,0 +1,39 @@
+[package]
+name = "blink-esp-hal"
+version = "0.1.0"
+publish = false
+description = "Smoke fixture: blink one LED on bare-metal esp-hal (ESP32, S3, C3, C6)"
+authors = ["Florian Waibel <fwaibel@datenkollektiv.de>"]
+edition = "2021"
+license = "MIT"
+# esp-hal 1.2 requires MSRV 1.95.
+rust-version = "1.95"
+
+[[bin]]
+name = "blink-esp-hal"
+path = "src/main.rs"
+test = false
+bench = false
+
+[features]
+# Exactly one chip feature; `just blink-hal <chip>` picks it.
+esp32 = ["esp-hal/esp32", "esp-bootloader-esp-idf/esp32", "esp-println/esp32"]
+esp32s3 = ["esp-hal/esp32s3", "esp-bootloader-esp-idf/esp32s3", "esp-println/esp32s3"]
+esp32c3 = ["esp-hal/esp32c3", "esp-bootloader-esp-idf/esp32c3", "esp-println/esp32c3"]
+esp32c6 = ["esp-hal/esp32c6", "esp-bootloader-esp-idf/esp32c6", "esp-println/esp32c6"]
+
+[dependencies]
+blink = { path = "../blink" }
+# Family pins (rustyfarian-knob, ADR 006); no `defmt` features anywhere.
+esp-hal = { version = "=1.2.2" }
+esp-bootloader-esp-idf = { version = "=0.6.0", default-features = false }
+esp-println = { version = "=0.18.0", default-features = false, features = ["auto", "critical-section"] }
+
+[profile.dev]
+# esp-hal recommends optimised builds; opt-level 1 also avoids the xtensa register spill in compiler_builtins.
+opt-level = 1
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1

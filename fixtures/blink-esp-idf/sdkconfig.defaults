@@ -1,0 +1,5 @@
+# Shared by all four chips; the chip comes from MCU (set by `just blink-idf <chip>`).
+# Rust needs more main task stack than the 3584-byte default.
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8000
+# 1 ms FreeRTOS ticks, so FreeRtos::delay_ms is not rounded to 10 ms.
+CONFIG_FREERTOS_HZ=1000

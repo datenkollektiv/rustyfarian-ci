@@ -1,0 +1,23 @@
+name: Setup AVR toolchain
+description: Install avr-gcc and the pinned AVR nightly with rust-src.
+
+inputs:
+  toolchain:
+    description: AVR nightly (family pin, see CONVENTIONS.md); must match the fixture's rust-toolchain.toml
+    required: false
+    default: nightly-2025-04-27
+
+runs:
+  using: composite
+  steps:
+    # avr-gcc is needed even for a core-only build: the AVR 32-bit multiply intrinsics come from libgcc.
+    # binutils-avr supplies avr-ld; avr-libc the crt objects.
+    - name: Install AVR GCC toolchain
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y gcc-avr binutils-avr avr-libc
+
+    - name: Install AVR nightly
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ inputs.toolchain }}
+        components: rust-src

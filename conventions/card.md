@@ -1,11 +1,12 @@
 ---
 topic: card
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Convention: README Business Card
 
 Every rustyfarian repo presents itself the same way: README, licence files, and GitHub metadata.
+The ecosystem is family and friends; this card applies to family repos only (see [Friends](#friends)).
 Checked by the `family-resemblance` skill (`/family-resemblance card`); this file is the single source of the rules.
 Change a rule here, bump `version`, and every repo picks it up on its next run.
 
@@ -127,10 +128,11 @@ This {kind} embodies the principle of **extracting testable pure logic from hard
 Public repos list **public crate repos only**.
 `private` repos carry the same block and may add a `### Private family` subsection after it, linking other private repos.
 
-The block, verbatim, with two permitted per-repo edits:
+The block, verbatim, with three permitted per-repo edits:
 
 - `<repo>` in the opening sentence is the repo's own name.
 - A family member marks itself: its diagram label gains `<br/>(this repo)`, and the Repo cell of its table row becomes `**<repo>** (this repo)` with no link; the Role cell stays.
+- A repo may add [friends](#friends): a diagram node whose label ends in `<br/>(friend)`, its edges, and a table row whose Role starts with `Friend —`.
 
 One or more repo-specific sentences may follow the table.
 
@@ -171,11 +173,26 @@ Dotted edge: a natural fit, not adopted yet.
 - `A --> B` is solid exactly when a package in A depends on a crate B owns — any dependency kind, including dev and optional.
 - Every other edge in the diagram is dotted.
 - A dependency between members with no edge at all is a missing edge: add it here first, then let the repos follow.
+- Friends are optional: a dependency on a friend needs no edge, and a drawn friend edge follows the same solid/dotted rule.
 - Last verified against Cargo.toml: 2026-11-13.
+
+### Friends
+
+Friends are related repos outside the family: forks that keep their upstream's README shape and licence.
+
+| Repo | Upstream | Role |
+|:-----|:---------|:-----|
+| rustyfarian-esp8266-hal | esp-rs/esp8266-hal (archived) | ESP8266 bare-metal HAL |
+| rustyfarian-esp8266-nonos | oblx/esp-8266-12f | ESP8266 NONOS SDK: Wi-Fi and MQTT |
+
+- The card does not apply to friends; `/family-resemblance` skips them.
+- Friends are optional in a repo's Family diagram and table, never required.
+- Public repos show public friends only, as for family members.
 
 ## License
 
 Dual licence `MIT OR Apache-2.0`; files, README section, badge and package manifests must agree.
+A repo listed under [Licence exceptions](#licence-exceptions) follows its entry there instead.
 
 - Files: `LICENSE-MIT` and `LICENSE-APACHE` at the repo root, no bare `LICENSE`.
 - Manifests: every workspace package's `license` is `MIT OR Apache-2.0`, directly or via `license.workspace = true`; `pyproject.toml` likewise.
@@ -197,6 +214,26 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
 ```
 
+### Licence exceptions
+
+A repo that can never be dual-licensed as a whole keeps its own licence and is listed here.
+An entry is a recorded decision, not a drift fix; add one only with a reason that rules out `MIT OR Apache-2.0`.
+
+| Repo | Licence (SPDX) | Licence file | Reason |
+|:-----|:---------------|:-------------|:-------|
+| rustyfarian-esp8266-nonos | `WTFPL` | `COPYING` | Fork of oblx/esp-8266-12f (WTFPL); `vendor/` holds Espressif MIT, ESP8266-only SDK archives. |
+
+rustyfarian-esp8266-nonos is a [friend](#friends), so no check reads its row today; the row records the decision.
+
+An excepted repo shows its own licence instead of the dual licence:
+
+- Badge: `[![License](https://img.shields.io/badge/license-<SPDX>-blue.svg)](#license)`, with the SPDX id shields-escaped as for the Rust badge.
+- Files: the listed licence file at the repo root.
+- Manifests: every workspace package's `license` is the listed SPDX id.
+- README: `## License` names the licence and links the licence file.
+- README: the same section names every third-party carve-out with its own terms, such as the SDK archives under `vendor/`.
+- GitHub: the detected licence equals the listed SPDX id.
+
 ## Agent Files
 
 `AGENTS.md` at the repo root, so any AI tool finds the project guide.
@@ -210,7 +247,7 @@ Public repos only.
 - Domain topics (`ws2812`, `mqtt`, `lora`, …) are free and not checked.
 - Wiki and Projects are off.
 - The description is set and claims no narrower scope than the README documents (no single chip the repo has outgrown).
-- GitHub's detected licence is `MIT` or `Apache-2.0`, never `NOASSERTION`.
+- GitHub's detected licence is `MIT` or `Apache-2.0`, or the SPDX id from [Licence exceptions](#licence-exceptions); never `NOASSERTION`.
 
 ## Checks
 
@@ -223,24 +260,24 @@ Text comparisons ignore whitespace: line wrapping and spacing around `—` do no
 | C03 | Banner image file exists                                                 | public     |
 | C04 | Required badges present, in order, before any extra badge                | all        |
 | C05 | Every workflow badge points at an existing `.github/workflows/` file     | all        |
-| C06 | License badge reads `MIT/Apache-2.0` and links `#license`                | all        |
+| C06 | License badge reads `MIT/Apache-2.0`, or the repo's entry in Licence exceptions, and links `#license` | all |
 | C07 | Rust badge label matches the derived `<msrv>`                            | Rust types |
 | C08 | Pitch paragraph follows the badges                                       | all        |
 | C09 | AI note text matches, and sits in the intro after the pitch              | all        |
 | C10 | Vision is the first H2; Philosophy, then Family follow where present     | all        |
 | C11 | Philosophy opens with the shared sentence                                | Rust types |
 | C12 | Family block matches, allowing only the permitted per-repo edits         | all        |
-| C13 | Family edges are true: solid exactly when the Cargo dependency exists    | all        |
+| C13 | Family edges are true: solid exactly when the Cargo dependency exists; friend edges optional | all |
 | C14 | `library` has a `## Crates` section                                      | library    |
 | C15 | An H2 starting with `Development` exists                                 | all        |
-| C16 | `## License` is the last H2, its text matches, and nothing follows it    | all        |
-| C17 | `LICENSE-MIT` and `LICENSE-APACHE` exist; no bare `LICENSE`              | all        |
-| C18 | Every manifest `license` is `MIT OR Apache-2.0`                          | all        |
+| C16 | `## License` is the last H2, its text matches (or the repo's entry in Licence exceptions), and nothing follows it | all |
+| C17 | `LICENSE-MIT` and `LICENSE-APACHE` exist and no bare `LICENSE`, or the repo's entry in Licence exceptions | all |
+| C18 | Every manifest `license` is `MIT OR Apache-2.0`, or the repo's entry in Licence exceptions | all |
 | C19 | `AGENTS.md` exists                                                       | all        |
 | C20 | Topics include the core set for the repo's type                         | public     |
 | C21 | Wiki and Projects are off                                                | public     |
 | C22 | Description is set and no narrower than the README                       | public     |
-| C23 | GitHub licence is `MIT` or `Apache-2.0`, not `NOASSERTION`               | public     |
+| C23 | GitHub licence is `MIT` or `Apache-2.0`, or the repo's entry in Licence exceptions; not `NOASSERTION` | public |
 
 "Rust types" means `library` and `firmware`.
 "public" means every repo without the `private` modifier.

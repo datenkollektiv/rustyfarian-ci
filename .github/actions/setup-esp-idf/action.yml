@@ -1,0 +1,52 @@
+name: Setup ESP-IDF
+description: Install ldproxy, restore the ESP-IDF tools cache (~/.espressif) and export the esp-idf-sys environment.
+
+inputs:
+  idf-version:
+    description: ESP-IDF version for esp-idf-sys (family pin, see CONVENTIONS.md)
+    required: false
+    default: v5.3.3
+  mcu:
+    description: esp-idf-sys MCU (esp32, esp32s3, esp32c3, esp32c6)
+    required: true
+  ldproxy-version:
+    description: ldproxy release from esp-rs/embuild
+    required: false
+    default: "0.3.2"
+
+runs:
+  using: composite
+  steps:
+    - name: Install ldproxy
+      shell: bash
+      env:
+        LDPROXY_VERSION: ${{ inputs.ldproxy-version }}
+      run: |
+        set -euo pipefail
+        host="$(rustc -vV | sed -n 's/^host: //p')"
+        tmp="$(mktemp -d)"
+        curl -fsSL -o "$tmp/ldproxy.zip" \
+          "https://github.com/esp-rs/embuild/releases/download/ldproxy-v${LDPROXY_VERSION}/ldproxy-${host}.zip"
+        unzip -o "$tmp/ldproxy.zip" -d "$HOME/.cargo/bin"
+        chmod +x "$HOME/.cargo/bin/ldproxy"
+
+    - name: Cache ESP-IDF tools
+      uses: actions/cache@v6
+      with:
+        # dist/ holds the tool archives, already extracted into tools/.
+        path: |
+          ~/.espressif
+          !~/.espressif/dist
+        key: esp-idf-${{ runner.os }}-${{ inputs.idf-version }}-${{ inputs.mcu }}
+
+    - name: Export esp-idf-sys environment
+      shell: bash
+      env:
+        IDF_VERSION: ${{ inputs.idf-version }}
+        IDF_MCU: ${{ inputs.mcu }}
+      run: |
+        {
+          echo "ESP_IDF_VERSION=$IDF_VERSION"
+          echo "ESP_IDF_TOOLS_INSTALL_DIR=global"
+          echo "MCU=$IDF_MCU"
+        } >> "$GITHUB_ENV"

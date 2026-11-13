@@ -1,0 +1,6 @@
+# Family AVR nightly (rustyfarian-peripherals, rustyfarian-ws2812).
+# CI installs it with the setup-avr action; locally rustup installs it from this file.
+[toolchain]
+channel = "nightly-2025-04-27"
+components = ["rust-src"]
+profile = "minimal"

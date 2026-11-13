@@ -1,0 +1,109 @@
+name: Smoke targets
+
+# Builds and links the blink fixture on every target in the family, so toolchain, esp-hal,
+# esp-idf-sys and setup-action breakage shows up here before it reaches a family repo.
+# Each matrix job runs exactly one `just ci-blink <runtime> <chip>` recipe.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "fixtures/**"
+      - ".github/actions/**"
+      - ".github/workflows/smoke-targets.yml"
+      - "justfile"
+      - "Cargo.toml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "fixtures/**"
+      - ".github/actions/**"
+      - ".github/workflows/smoke-targets.yml"
+      - "justfile"
+      - "Cargo.toml"
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-targets-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  XTENSA_VERSION: "1.97.0.0"
+  ESP_IDF_VERSION: v5.3.3
+
+jobs:
+  blink:
+    name: ${{ matrix.runtime }} ${{ matrix.chip }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.runtime == 'idf' && 60 || 20 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { chip: esp32, runtime: hal, target: xtensa-esp32-none-elf, toolchain: esp }
+          - { chip: s3, runtime: hal, target: xtensa-esp32s3-none-elf, toolchain: esp }
+          - { chip: c3, runtime: hal, target: riscv32imc-unknown-none-elf, toolchain: stable }
+          - { chip: c6, runtime: hal, target: riscv32imac-unknown-none-elf, toolchain: stable }
+          - { chip: esp32, runtime: idf, target: xtensa-esp32-espidf, toolchain: esp }
+          - { chip: s3, runtime: idf, target: xtensa-esp32s3-espidf, toolchain: esp }
+          - { chip: c3, runtime: idf, target: riscv32imc-esp-espidf, toolchain: esp }
+          - { chip: c6, runtime: idf, target: riscv32imac-esp-espidf, toolchain: esp }
+          - { chip: atmega328p, runtime: avr, target: avr-none, toolchain: nightly-2025-04-27 }
+    env:
+      RUNTIME: ${{ matrix.runtime }}
+      CHIP: ${{ matrix.chip }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Xtensa toolchain
+        if: matrix.toolchain == 'esp'
+        uses: ./.github/actions/setup-xtensa
+        with:
+          version: ${{ env.XTENSA_VERSION }}
+          # espup installs the esp toolchain only for an Xtensa target, so the RISC-V IDF jobs request esp32.
+          buildtargets: ${{ matrix.chip == 's3' && 'esp32s3' || 'esp32' }}
+
+      - name: Setup ESP-IDF
+        if: matrix.runtime == 'idf'
+        uses: ./.github/actions/setup-esp-idf
+        with:
+          idf-version: ${{ env.ESP_IDF_VERSION }}
+          mcu: ${{ matrix.chip == 'esp32' && 'esp32' || format('esp32{0}', matrix.chip) }}
+
+      - name: Setup AVR toolchain
+        if: matrix.runtime == 'avr'
+        uses: ./.github/actions/setup-avr
+        with:
+          toolchain: ${{ matrix.toolchain }}
+
+      - name: Setup Rust and just
+        if: matrix.toolchain == 'stable'
+        uses: ./.github/actions/setup-rust-just
+        with:
+          toolchain: stable
+          cache: false
+
+      - name: Setup just
+        if: matrix.toolchain != 'stable'
+        uses: extractions/setup-just@v4
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fixtures/${{ matrix.runtime == 'avr' && 'blink-avr' || format('blink-esp-{0}', matrix.runtime) }} -> target
+          # rust-cache sees the default rustc, not the esp toolchain, so the toolchain version is part of the key.
+          # A restored esp-idf-sys CMake tree from another IDF version or sdkconfig fails to configure.
+          key: >-
+            ${{ matrix.target }}-${{ matrix.toolchain == 'esp' && env.XTENSA_VERSION || matrix.toolchain }}-${{
+            matrix.runtime == 'idf' && format('{0}-{1}', env.ESP_IDF_VERSION, hashFiles('fixtures/blink-esp-idf/sdkconfig.defaults')) || 'none' }}
+
+      - name: Run just ci-blink ${{ matrix.runtime }} ${{ matrix.chip }}
+        run: just ci-blink "$RUNTIME" "$CHIP"

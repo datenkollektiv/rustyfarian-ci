@@ -1,0 +1,7 @@
+[build]
+target = "avr-none"
+
+[target.'cfg(target_arch = "avr")']
+rustflags = ["-C", "target-cpu=atmega328p"]
+
+# build-std is not set here: `just blink-avr` passes `-Zbuild-std=core` on the command line.

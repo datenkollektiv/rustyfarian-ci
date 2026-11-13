@@ -1,0 +1,14 @@
+[package]
+name = "blink"
+version = "0.1.0"
+publish = false
+description = "Smoke fixture: blink one LED through embedded-hal 1.0 traits"
+# Self-contained, no workspace inheritance: the firmware fixtures and Dependabot read this
+# manifest as a path dependency outside the root workspace.
+authors = ["Florian Waibel <fwaibel@datenkollektiv.de>"]
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/datenkollektiv/rustyfarian-ci"
+
+[dependencies]
+embedded-hal = "1.0"

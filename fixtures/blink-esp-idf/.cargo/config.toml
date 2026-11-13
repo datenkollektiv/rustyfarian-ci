@@ -1,0 +1,26 @@
+# ESP-IDF (std) targets. `just blink-idf <chip>` picks the triple, sets `MCU` and
+# passes `-Zbuild-std=std,panic_abort`.
+
+[target.xtensa-esp32-espidf]
+linker = "ldproxy"
+rustflags = ["--cfg", "espidf_time64"]
+
+[target.xtensa-esp32s3-espidf]
+linker = "ldproxy"
+rustflags = ["--cfg", "espidf_time64"]
+
+[target.riscv32imc-esp-espidf]
+linker = "ldproxy"
+rustflags = ["--cfg", "espidf_time64"]
+
+[target.riscv32imac-esp-espidf]
+linker = "ldproxy"
+rustflags = ["--cfg", "espidf_time64"]
+
+[env]
+# v5.3.3 matches every rustyfarian repo (rustyfarian-knob ADR 012).
+ESP_IDF_VERSION = "v5.3.3"
+# Tools and the IDF checkout live in ~/.espressif, which CI caches per IDF version and chip.
+ESP_IDF_TOOLS_INSTALL_DIR = "global"
+# Resolved by embuild relative to this fixture's workspace root.
+ESP_IDF_SDKCONFIG_DEFAULTS = "sdkconfig.defaults"

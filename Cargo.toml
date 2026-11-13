@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+members = ["fixtures/blink"]
+# Firmware fixtures are separate workspaces with their own toolchain and Cargo.lock;
+# the host checks (host-checks.yml) must never build them.
+exclude = [
+    "fixtures/blink-esp-hal",
+    "fixtures/blink-esp-idf",
+    "fixtures/blink-avr",
+]

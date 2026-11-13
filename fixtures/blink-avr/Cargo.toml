@@ -1,0 +1,34 @@
+[package]
+name = "blink-avr"
+version = "0.1.0"
+publish = false
+description = "Smoke fixture: blink one LED on the ATmega328P (Arduino Nano) with avr-hal"
+authors = ["Florian Waibel <fwaibel@datenkollektiv.de>"]
+edition = "2021"
+license = "MIT"
+
+[[bin]]
+name = "blink-avr"
+path = "src/main.rs"
+test = false
+bench = false
+
+[dependencies]
+blink = { path = "../blink" }
+
+[dependencies.arduino-hal]
+git = "https://github.com/Rahix/avr-hal"
+# avr-hal publishes nothing to crates.io and has no tags, so a commit SHA is the only ref.
+# Same rev as rustyfarian-peripherals and rustyfarian-ws2812; bump together with them.
+rev = "e5c8f37fe48419956e722490a82b9ca9b9fc61a2"
+features = ["arduino-nano"]
+
+[profile.dev]
+panic = "abort"
+opt-level = "s"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"

@@ -9,3 +9,24 @@ updates:
     groups:
       github-actions:
         patterns: ["*"]
+
+  # The root host workspace and the three firmware fixtures, each with its own Cargo.lock.
+  # The smoke-targets workflow builds every bump before it can merge.
+  - package-ecosystem: cargo
+    directories:
+      - "/"
+      - "/fixtures/blink-esp-hal"
+      - "/fixtures/blink-esp-idf"
+      - "/fixtures/blink-avr"
+    schedule:
+      interval: weekly
+    groups:
+      # esp-idf-sys is a `links` crate: esp-idf-hal, esp-idf-sys and embuild must move together,
+      # or Cargo resolves two esp-idf-sys versions and refuses to build.
+      esp-idf:
+        patterns: ["esp-idf-*", "embuild"]
+      # The esp-hal wave is exact-pinned and released in lockstep.
+      esp-hal:
+        patterns: ["esp-hal", "esp-bootloader-esp-idf", "esp-println"]
+      cargo:
+        patterns: ["*"]

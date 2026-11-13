@@ -1,0 +1,87 @@
+name: Host smoke
+
+# Runs the reusable host-checks.yml against this repo's own workspace (fixtures/blink),
+# exactly as a family repo calls it. host-checks.yml pins setup-rust-just by its published
+# `@v1` ref, so the `setup-rust-just` job also exercises the local, unreleased action.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      # ci-fmt also checks the firmware fixture sources.
+      - "fixtures/**"
+      - ".github/actions/setup-rust-just/**"
+      - ".github/workflows/host-checks.yml"
+      - ".github/workflows/host-smoke.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "deny.toml"
+      - "justfile"
+  pull_request:
+    branches: ["main"]
+    paths:
+      # ci-fmt also checks the firmware fixture sources.
+      - "fixtures/**"
+      - ".github/actions/setup-rust-just/**"
+      - ".github/workflows/host-checks.yml"
+      - ".github/workflows/host-smoke.yml"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "deny.toml"
+      - "justfile"
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: host-smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fmt:
+    uses: ./.github/workflows/host-checks.yml
+    with:
+      check: fmt
+
+  clippy:
+    uses: ./.github/workflows/host-checks.yml
+    with:
+      check: clippy
+
+  test:
+    uses: ./.github/workflows/host-checks.yml
+    with:
+      check: test
+
+  deny:
+    uses: ./.github/workflows/host-checks.yml
+    with:
+      check: deny
+
+  audit:
+    uses: ./.github/workflows/host-checks.yml
+    with:
+      check: audit
+
+  setup-rust-just:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Rust and just
+        uses: ./.github/actions/setup-rust-just
+        with:
+          toolchain: stable
+          components: clippy,rustfmt
+          tools: cargo-deny,cargo-audit
+          cache-key: setup-rust-just
+
+      - name: Run just ci-setup-rust-just
+        run: just ci-setup-rust-just

@@ -1,0 +1,31 @@
+name: Setup Xtensa toolchain
+description: Install the esp Rust toolchain and Xtensa GCC with esp-rs/xtensa-toolchain, cached by version and build targets.
+
+inputs:
+  version:
+    description: esp toolchain version (family pin, see CONVENTIONS.md)
+    required: false
+    default: "1.97.0.0"
+  buildtargets:
+    description: Comma-separated espup targets (e.g. esp32s3); espup installs the esp toolchain only when one of them is Xtensa
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Cache esp toolchain
+      uses: actions/cache@v6
+      with:
+        path: ~/.rustup/toolchains/esp
+        # The version must stay in the key: a stale download would mask a broken toolchain bump.
+        key: xtensa-esp-${{ runner.os }}-${{ inputs.version }}-${{ inputs.buildtargets }}
+
+    - name: Install esp toolchain
+      uses: esp-rs/xtensa-toolchain@v1.7.0
+      with:
+        default: false
+        buildtargets: ${{ inputs.buildtargets }}
+        version: ${{ inputs.version }}
+        ldproxy: false
+      env:
+        GITHUB_TOKEN: ${{ github.token }}

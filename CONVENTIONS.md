@@ -88,10 +88,20 @@ jobs:
 | `taiki-e/install-action` | `v2` (cargo tools; no `cargo install` from source, no `curl \| bash`) |
 | `dtolnay/rust-toolchain` | `master` with a `toolchain` input |
 | `esp-rs/xtensa-toolchain` | `v1.7.0` |
+| `actions/cache` | `v6` |
 
 Xtensa toolchain pin for all repos: `1.97.0.0`.
 Each repo moves to it when its cross-target workflow adopts the shared setup actions (knob: still `1.95.0.0`).
 Keep the version in the toolchain cache key.
+
+| Pin | Version |
+|:----|:--------|
+| ESP-IDF | `v5.3.3` (knob ADR 012) |
+| AVR nightly | `nightly-2025-04-27` |
+| avr-hal (git) | `e5c8f37fe48419956e722490a82b9ca9b9fc61a2` |
+| ldproxy | `0.3.2` |
+
+Never enable `defmt` features in an ESP-IDF build; its orphan sections break the v5.3 link.
 
 </details>
 
@@ -101,11 +111,46 @@ Keep the version in the toolchain cache key.
 - `setup-rust-just`: Rust toolchain, `Swatinem/rust-cache`, `just`, optional cargo tools.
 - rust-cache keys on the job id, and every job of a reusable workflow has the same id; pass `cache-key` so jobs don't overwrite each other's cache.
 - `host-checks.yml` caches only `clippy` and `test`, keyed by the check; `fmt`, `deny` and `audit` compile nothing.
-- `setup-esp-idf`: planned, extracted from rgb-clock.
+- `setup-xtensa`: the `esp` toolchain via `esp-rs/xtensa-toolchain`, cached under `~/.rustup/toolchains/esp` by version and `buildtargets`.
+- espup installs the `esp` toolchain only for an Xtensa target, so RISC-V ESP-IDF jobs pass `buildtargets: esp32`.
+- `setup-esp-idf`: pinned `ldproxy`, the `~/.espressif` cache keyed by IDF version and MCU, and `ESP_IDF_VERSION`, `ESP_IDF_TOOLS_INSTALL_DIR=global` and `MCU` in the job env.
+- `setup-avr`: `avr-gcc`, `binutils-avr` and `avr-libc` from apt, plus the AVR nightly with `rust-src`.
+- None of the three installs `just` or restores the cargo cache; the job adds `extractions/setup-just` and `Swatinem/rust-cache` with `workspaces` and a per-job `key`.
 
 `host-checks.yml` references `setup-rust-just` by full ref (`datenkollektiv/rustyfarian-ci/.github/actions/setup-rust-just@v1`).
 A relative `./` path would resolve against the caller's checkout, not this repo.
 A `v2` release therefore bumps that inner ref too.
+Family repos use the other actions the same way, e.g. `datenkollektiv/rustyfarian-ci/.github/actions/setup-xtensa@v1`.
+
+</details>
+
+<details>
+<summary>Smoke fixtures</summary>
+
+This repo tests its own actions on a "blink one LED" fixture that builds on every target in the family.
+
+| Chip | esp-hal (`no_std`) | ESP-IDF (std) | LED |
+|:-----|:-------------------|:--------------|:----|
+| esp32 | `xtensa-esp32-none-elf` | `xtensa-esp32-espidf` | GPIO2 (ESP32 DevKit V1) |
+| s3 | `xtensa-esp32s3-none-elf` | `xtensa-esp32s3-espidf` | GPIO35 (Heltec WiFi LoRa 32 V3) |
+| c3 | `riscv32imc-unknown-none-elf` | `riscv32imc-esp-espidf` | GPIO7 (ESP32-C3-DevKit-RUST-1) |
+| c6 | `riscv32imac-unknown-none-elf` | `riscv32imac-esp-espidf` | GPIO15 (Seeed XIAO ESP32C6) |
+| atmega328p | `avr-none` (avr-hal) | n/a | D13 (Arduino Nano) |
+
+- `fixtures/blink` is the only root workspace member: a host-tested `Blinker` over `embedded-hal` 1.0.
+- `fixtures/blink-esp-hal`, `blink-esp-idf` and `blink-avr` are excluded from the root workspace and have their own `Cargo.lock` and `target/`.
+- Toolchains: `esp` for Xtensa esp-hal and every ESP-IDF build, `stable` with the prebuilt rustup target for RISC-V esp-hal, the AVR nightly for AVR.
+- `-Zbuild-std=core` for Xtensa esp-hal and AVR, `-Zbuild-std=std,panic_abort` for ESP-IDF.
+- `smoke-targets.yml` runs one matrix job per row and runtime; each runs `just ci-blink <runtime> <chip>`.
+- `host-smoke.yml` calls `host-checks.yml` for all five checks and runs `setup-rust-just` directly.
+- Dependabot groups `esp-idf-*` with `embuild`, because `esp-idf-sys` is a `links` crate.
+
+```sh
+just blink-hal s3
+just blink-idf c3
+just blink-avr
+just ci-blink hal c6
+```
 
 </details>
 
@@ -121,6 +166,9 @@ A `v2` release therefore bumps that inner ref too.
 
 <details>
 <summary>Releasing this repo</summary>
+
+`host-checks.yml` resolves `setup-rust-just@v1` from GitHub, so the host-smoke `uses:` jobs test the published `v1`, not the PR's copy.
+On a fresh remote, push `main` and the `v1` tag first; until then those five jobs fail at "Setup Rust and just".
 
 Tag the release and move the major tag.
 

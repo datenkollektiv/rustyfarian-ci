@@ -1,0 +1,23 @@
+# Bare-metal esp-hal targets. esp-hal emits no linker scripts of its own, so every
+# target needs `-Tlinkall.x`. Xtensa also needs `-fno-stack-protector`: GCC
+# esp-15.2.0_20250920 injects `__stack_chk_guard` references (see rustyfarian-knob).
+# `-Zbuild-std=core` is passed by `just blink-hal` for Xtensa only; RISC-V uses the
+# prebuilt rustup target on stable.
+
+[target.xtensa-esp32-none-elf]
+rustflags = [
+    "-C", "link-arg=-Tlinkall.x",
+    "-C", "link-arg=-fno-stack-protector",
+]
+
+[target.xtensa-esp32s3-none-elf]
+rustflags = [
+    "-C", "link-arg=-Tlinkall.x",
+    "-C", "link-arg=-fno-stack-protector",
+]
+
+[target.riscv32imc-unknown-none-elf]
+rustflags = ["-C", "link-arg=-Tlinkall.x"]
+
+[target.riscv32imac-unknown-none-elf]
+rustflags = ["-C", "link-arg=-Tlinkall.x"]
