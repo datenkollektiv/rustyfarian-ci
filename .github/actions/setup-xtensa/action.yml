@@ -13,12 +13,22 @@ inputs:
 runs:
   using: composite
   steps:
+    # actions/cache rejects commas in a key, so `esp32,esp32s3` becomes `esp32-esp32s3`.
+    - name: Cache key for build targets
+      id: targets
+      shell: bash
+      env:
+        BUILDTARGETS: ${{ inputs.buildtargets }}
+      run: |
+        targets="${BUILDTARGETS// /}"
+        echo "key=${targets//,/-}" >> "$GITHUB_OUTPUT"
+
     - name: Cache esp toolchain
       uses: actions/cache@v6
       with:
         path: ~/.rustup/toolchains/esp
         # The version must stay in the key: a stale download would mask a broken toolchain bump.
-        key: xtensa-esp-${{ runner.os }}-${{ inputs.version }}-${{ inputs.buildtargets }}
+        key: xtensa-esp-${{ runner.os }}-${{ inputs.version }}-${{ steps.targets.outputs.key }}
 
     - name: Install esp toolchain
       uses: esp-rs/xtensa-toolchain@v1.7.0
