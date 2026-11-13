@@ -170,13 +170,13 @@ just ci-blink hal c6
 `host-checks.yml` resolves `setup-rust-just@v1` from GitHub, so the host-smoke `uses:` jobs test the published `v1`, not the PR's copy.
 On a fresh remote, push `main` and the `v1` tag first; until then those five jobs fail at "Setup Rust and just".
 
-Tag the release and move the major tag.
+Every release gets a new immutable `vX.Y.Z` tag and moves the major tag callers pin; never re-point a `vX.Y.Z` tag.
+Patch for fixes, minor for new actions, inputs or changed defaults, a new major (`v2`) for breaking changes.
+`just release` tags `origin/main` with both as annotated tags and pushes them after one confirmation.
+It refuses a dirty tree, a branch other than `main`, a `main` that differs from `origin/main`, and an existing version tag.
 
 ```sh
-git tag v1.0.0
-git tag -f v1
-git push origin v1.0.0
-git push -f origin v1
+just release 1.1.0
 ```
 
 </details>

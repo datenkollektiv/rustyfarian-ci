@@ -37,10 +37,11 @@ act -j clippy --pull=false -P ubuntu-latest=catthehacker/ubuntu:act-latest --loc
 ## Smoke fixtures
 
 The fixtures build locally with the same recipes CI runs.
-The firmware recipes need espup (`esp` toolchain), `ldproxy` and `avr-gcc`; see [`CONVENTIONS.md`](CONVENTIONS.md).
+The firmware recipes need espup (`esp` toolchain), `ldproxy` and `avr-gcc`; `just doctor` reports what is missing, `just setup` installs the rustup parts.
 
 ```sh
-just ci-fmt ci-clippy ci-test ci-deny ci-audit
+just doctor
+just ci
 just blink-hal s3
 just blink-idf c6
 just blink-avr
