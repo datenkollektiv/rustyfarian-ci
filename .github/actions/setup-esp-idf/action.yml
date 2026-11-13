@@ -5,7 +5,7 @@ inputs:
   idf-version:
     description: ESP-IDF version for esp-idf-sys (family pin, see CONVENTIONS.md)
     required: false
-    default: v5.3.3
+    default: v6.1
   mcu:
     description: esp-idf-sys MCU (esp32, esp32s3, esp32c3, esp32c6)
     required: true

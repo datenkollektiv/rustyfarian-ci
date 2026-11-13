@@ -96,7 +96,7 @@ Keep the version in the toolchain cache key.
 
 | Pin | Version |
 |:----|:--------|
-| ESP-IDF | `v5.3.3` (knob ADR 012) |
+| ESP-IDF | `v6.1` (network, power, ws2812; knob still `v5.3.3`) |
 | AVR nightly | `nightly-2025-04-27` |
 | avr-hal (git) | `e5c8f37fe48419956e722490a82b9ca9b9fc61a2` |
 | ldproxy | `0.3.2` |

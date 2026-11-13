@@ -18,8 +18,9 @@ linker = "ldproxy"
 rustflags = ["--cfg", "espidf_time64"]
 
 [env]
-# v5.3.3 matches every rustyfarian repo (rustyfarian-knob ADR 012).
-ESP_IDF_VERSION = "v5.3.3"
+# The family's v6.1 wave (rustyfarian-network docs/features/esp-idf-v6-1-upgrade-v1.md).
+# v5.3.3's esp-clang 16 needs libxml2.so.2, which Ubuntu 26 (ubuntu-latest) no longer ships.
+ESP_IDF_VERSION = "v6.1"
 # Tools and the IDF checkout live in ~/.espressif, which CI caches per IDF version and chip.
 ESP_IDF_TOOLS_INSTALL_DIR = "global"
 # Resolved by embuild relative to this fixture's workspace root.
