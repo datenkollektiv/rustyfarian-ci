@@ -1,5 +1,11 @@
 # rustyfarian-ci
 
+<p align="center">
+  <img src="docs/steampunk-meets-future-in-the-hatchery.png"
+       alt="Hatchery — shared CI hen. A goggled hen holds up a checked clipboard over a nest of eggs and an ESP32 board, between brass fmt, clippy, deny and test gauges and a neon just ci console."
+       width="720">
+</p>
+
 Shared GitHub Actions for the rustyfarian repos: a reusable host-checks workflow and composite setup actions.
 Conventions live in [`CONVENTIONS.md`](CONVENTIONS.md).
 
