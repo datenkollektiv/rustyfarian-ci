@@ -72,6 +72,13 @@ case "${1:-}" in
             exit 0
         fi
         PRUNED=0
+        # rm -rf follows a symlinked parent: never prune through targets/ or a namespace that points elsewhere.
+        for dir in "$RAMDISK_PATH/targets" "$RAMDISK_PATH"/targets/{hal,idf,avr}; do
+            if [ -L "$dir" ]; then
+                printf 'error: %s is a symlink; refusing to prune outside the RAM disk\n' "${dir#"$RAMDISK_PATH"/}" >&2
+                exit 1
+            fi
+        done
         for tree in "$RAMDISK_PATH"/targets/hal/* "$RAMDISK_PATH"/targets/idf/* "$RAMDISK_PATH"/targets/avr/*; do
             [ -d "$tree" ] && [ ! -L "$tree" ] || continue
             # A failed scan must not read as "stale": skip the tree instead.
