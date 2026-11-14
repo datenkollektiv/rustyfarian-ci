@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: datenkollektiv/rustyfarian-ci/.github/actions/setup-xtensa@v1
         with:
           version: ${{ env.XTENSA_VERSION }}
@@ -122,7 +122,7 @@ A workflow with a `paths:` filter must rebuild when the build recipe or the carg
 
 | Action | Version |
 |:-------|:--------|
-| `actions/checkout` | `v5` |
+| `actions/checkout` | `v7` |
 | `actions/cache` | `v6` |
 | `extractions/setup-just` | `v4` |
 | `Swatinem/rust-cache` | `v2` |
