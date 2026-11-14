@@ -1,6 +1,6 @@
 ---
 topic: card
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Convention: README Business Card
@@ -107,6 +107,14 @@ Image prompt for a new one — fill the `<…>` slots:
 
 Shields escaping: `-` → `--`, space → `%20`, `+` → `%2B`, `|` → `%7C`.
 Scopes use letters, digits, spaces and `-` only.
+
+## Pitch
+
+The pitch paragraph claims no narrower scope than the repo has.
+
+- Scope is the crates under `## Crates` and the chips the repo declares: chip features in its manifests and chips in its board tables.
+- A single chip, board or crate the repo has outgrown is drift, e.g. a pitch "targeting the Heltec WiFi LoRa 32 V3" in a repo with ESP32, -C3, -C6 and -S3 features.
+- A board named as an example (`e.g.`, `verified on`) is not a scope claim.
 
 ## AI Note
 
@@ -278,6 +286,7 @@ Text comparisons ignore whitespace: line wrapping and spacing around `—` do no
 | C21 | Wiki and Projects are off                                                | public     |
 | C22 | Description is set and no narrower than the README                       | public     |
 | C23 | GitHub licence is `MIT` or `Apache-2.0`, or the repo's entry in Licence exceptions; not `NOASSERTION` | public |
+| C24 | Pitch claims no narrower scope than the Crates section and declared chips | Rust types |
 
 "Rust types" means `library` and `firmware`.
 "public" means every repo without the `private` modifier.
